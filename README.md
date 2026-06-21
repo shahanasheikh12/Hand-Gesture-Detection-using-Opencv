@@ -2,7 +2,11 @@
 
 An interactive, high-performance hand tracking and gesture detection application. This project features two modes of operation: a **modern web-based localhost dashboard** (utilizing MediaPipe Web SDK with customizable glowing skeleton presets and particles) and a **native desktop OpenCV script**.
 
+### 🎥 Demo Video
+https://github.com/KalyanMurapaka45/Hand-Tracking-Using-Opencv/assets/101493756/e0d7fae9-4a16-4639-b5fe-04d5c7f6ce38
+
 ---
+
 
 ## ✨ Features
 
