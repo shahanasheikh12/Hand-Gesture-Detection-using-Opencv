@@ -56,14 +56,25 @@ Follow these steps to install and set up the project directly from the GitHub re
      ```
 
 5. **Run the Project**
-   - Start the project by running the appropriate command.
-     ```
-     python app.py
-     ```
 
-6. **Access the Project**
-   - Open a web browser or the appropriate client to access the project.
-  
+You can run the project in two different modes:
+
+#### Option A: Web-based Interactive Dashboard (Recommended)
+This mode runs a modern dashboard on **localhost** inside your web browser. It uses MediaPipe's Web SDK for fast client-side hand tracking with animations, telemetry logs, custom visual styles, and live gesture detection.
+1. Run the local server:
+   ```bash
+   python server.py
+   ```
+2. The dashboard will automatically open in your default browser at `http://localhost:8000`. (Make sure you are connected to the internet to load the MediaPipe model resources).
+
+#### Option B: Desktop Window (OpenCV)
+This mode runs the original OpenCV desktop application.
+1. Run the script:
+   ```bash
+   python app.py
+   ```
+2. A separate video window titled "Image" will appear on your desktop. Press `q` to quit.
+
 
 ## Contributing
 

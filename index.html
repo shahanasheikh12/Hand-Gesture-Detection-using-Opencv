@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AeroTrack - Real-Time Hand Tracking Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+
+  <!-- Loading Screen -->
+  <div id="loading-overlay" class="loading-overlay">
+    <div class="spinner-container">
+      <div class="glow-spinner"></div>
+      <div class="logo-mark">AT</div>
+    </div>
+    <h2>Initializing AeroTrack AI</h2>
+    <p>Loading MediaPipe tracking models & requesting camera access...</p>
+    <div class="loading-bar-container">
+      <div class="loading-bar" id="loading-bar"></div>
+    </div>
+  </div>
+
+  <div class="app-wrapper">
+    <!-- Header -->
+    <header class="app-header">
+      <div class="logo-container">
+        <div class="logo-icon">
+          <i data-lucide="hand"></i>
+        </div>
+        <div class="logo-text">
+          <h1>AeroTrack</h1>
+          <span>V1.0.0 • POWERED BY MEDIAPIPE</span>
+        </div>
+      </div>
+      <div class="system-status">
+        <span class="status-indicator online"></span>
+        <span class="status-text" id="status-label">Active & Ready</span>
+      </div>
+    </header>
+
+    <!-- Main Content Grid -->
+    <main class="app-content">
+      
+      <!-- Left Panel: Video Feed & Visualizations -->
+      <section class="viewport-card">
+        <div class="viewport-header">
+          <div class="header-info">
+            <i data-lucide="video" class="header-icon"></i>
+            <h3>Live Camera Feed</h3>
+          </div>
+          <div class="viewport-actions">
+            <button id="btn-mirror" class="icon-btn active" title="Mirror Feed">
+              <i data-lucide="flip-horizontal"></i>
+            </button>
+            <button id="btn-fullscreen" class="icon-btn" title="Toggle Fullscreen">
+              <i data-lucide="maximize"></i>
+            </button>
+          </div>
+        </div>
+
+        <div class="video-container" id="video-container">
+          <!-- Hidden video element, canvas is shown -->
+          <video id="webcam" autoplay playsinline></video>
+          <canvas id="output-canvas"></canvas>
+          
+          <!-- Holographic overlay HUD elements -->
+          <div class="hud-overlay top-left">
+            <div class="hud-item">
+              <span class="hud-label">FPS</span>
+              <span class="hud-val highlight" id="hud-fps">00</span>
+            </div>
+            <div class="hud-item">
+              <span class="hud-label">LATENCY</span>
+              <span class="hud-val" id="hud-latency">0 ms</span>
+            </div>
+          </div>
+          
+          <div class="hud-overlay top-right">
+            <div class="hud-item flex-end">
+              <span class="hud-label">GESTURE DETECTED</span>
+              <span class="hud-val highlight" id="hud-gesture">None</span>
+            </div>
+          </div>
+          
+          <div class="hud-overlay bottom-left">
+            <div class="hud-item">
+              <span class="hud-label">ACTIVE HANDS</span>
+              <span class="hud-val" id="hud-hands">0</span>
+            </div>
+          </div>
+
+          <div id="camera-placeholder" class="camera-placeholder">
+            <i data-lucide="video-off" class="placeholder-icon"></i>
+            <h3>Camera is Turned Off</h3>
+            <p>Use the control panel on the right to start the webcam feed.</p>
+            <button id="btn-start-camera" class="btn btn-primary">
+              <i data-lucide="camera"></i> Start Camera
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Right Panel: Controls & Telemetry -->
+      <aside class="sidebar-controls">
+        
+        <!-- Tab Controls or Sections -->
+        <div class="control-card">
+          <div class="card-header">
+            <i data-lucide="sliders" class="card-icon"></i>
+            <h2>Tracking Settings</h2>
+          </div>
+          
+          <div class="control-group">
+            <div class="slider-header">
+              <label for="range-min-detection">Min Detection Confidence</label>
+              <span class="value-display" id="val-min-detection">0.5</span>
+            </div>
+            <input type="range" id="range-min-detection" min="0.1" max="0.9" step="0.05" value="0.5" class="custom-slider">
+            <p class="slider-desc">Minimum score for hand detection to be considered successful.</p>
+          </div>
+
+          <div class="control-group">
+            <div class="slider-header">
+              <label for="range-min-tracking">Min Tracking Confidence</label>
+              <span class="value-display" id="val-min-tracking">0.5</span>
+            </div>
+            <input type="range" id="range-min-tracking" min="0.1" max="0.9" step="0.05" value="0.5" class="custom-slider">
+            <p class="slider-desc">Minimum score for hand landmark tracking to remain active.</p>
+          </div>
+
+          <div class="control-group">
+            <div class="slider-header">
+              <label for="range-max-hands">Max Hands to Track</label>
+              <span class="value-display" id="val-max-hands">2</span>
+            </div>
+            <input type="range" id="range-max-hands" min="1" max="4" step="1" value="2" class="custom-slider">
+          </div>
+        </div>
+
+        <div class="control-card">
+          <div class="card-header">
+            <i data-lucide="palette" class="card-icon"></i>
+            <h2>Visual Customization</h2>
+          </div>
+
+          <div class="control-group">
+            <label for="select-render-mode">Render Preset</label>
+            <div class="select-wrapper">
+              <select id="select-render-mode" class="custom-select">
+                <option value="classic">Neon Skeleton (Classic)</option>
+                <option value="cyber">Cyberpunk Pulse (Particles)</option>
+                <option value="minimal">Minimal Joints Only</option>
+                <option value="hologram">Hologram HUD (Aqua)</option>
+              </select>
+              <i data-lucide="chevron-down" class="select-arrow"></i>
+            </div>
+          </div>
+
+          <div class="control-group">
+            <div class="checkbox-wrapper">
+              <input type="checkbox" id="check-show-video" checked class="custom-checkbox">
+              <label for="check-show-video">Show Webcam Video Feed</label>
+            </div>
+          </div>
+
+
+          <div class="control-group inline-row">
+            <div>
+              <label for="color-joints">Joint Color</label>
+              <div class="color-picker-wrapper">
+                <input type="color" id="color-joints" value="#a855f7" class="color-input">
+                <span class="color-text" id="text-joints">#a855f7</span>
+              </div>
+            </div>
+            <div>
+              <label for="color-connections">Connection Color</label>
+              <div class="color-picker-wrapper">
+                <input type="color" id="color-connections" value="#06b6d4" class="color-input">
+                <span class="color-text" id="text-connections">#06b6d4</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="control-group">
+            <div class="slider-header">
+              <label for="range-joint-size">Joint Radius</label>
+              <span class="value-display" id="val-joint-size">5 px</span>
+            </div>
+            <input type="range" id="range-joint-size" min="2" max="12" step="1" value="5" class="custom-slider">
+          </div>
+
+          <div class="control-group">
+            <div class="slider-header">
+              <label for="range-line-width">Connection Thickness</label>
+              <span class="value-display" id="val-line-width">3 px</span>
+            </div>
+            <input type="range" id="range-line-width" min="1" max="8" step="1" value="3" class="custom-slider">
+          </div>
+        </div>
+
+        <div class="control-card">
+          <div class="card-header">
+            <i data-lucide="info" class="card-icon"></i>
+            <h2>System & Gesture Info</h2>
+          </div>
+          <div class="gesture-help-list">
+            <div class="gesture-help-item">
+              <span class="gesture-icon">✊</span>
+              <div>
+                <strong>Fist</strong>
+                <span>All fingers folded closed</span>
+              </div>
+            </div>
+            <div class="gesture-help-item">
+              <span class="gesture-icon">✋</span>
+              <div>
+                <strong>Open Hand</strong>
+                <span>All fingers fully extended</span>
+              </div>
+            </div>
+            <div class="gesture-help-item">
+              <span class="gesture-icon">✌️</span>
+              <div>
+                <strong>Victory / Peace</strong>
+                <span>Index and Middle extended, others folded</span>
+              </div>
+            </div>
+            <div class="gesture-help-item">
+              <span class="gesture-icon">👍</span>
+              <div>
+                <strong>Thumbs Up</strong>
+                <span>Thumb extended upwards, others folded</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </aside>
+    </main>
+
+    <!-- Footer Status / Telemetry -->
+    <footer class="app-footer">
+      <div class="footer-segment">
+        <span class="footer-label">Engine:</span>
+        <span class="footer-value">MediaPipe Hands JS API</span>
+      </div>
+      <div class="footer-spacer"></div>
+      <div class="footer-segment">
+        <span class="footer-label">Local Host:</span>
+        <a href="http://localhost:8000" target="_blank" class="footer-value link">http://localhost:8000</a>
+      </div>
+    </footer>
+  </div>
+
+  <!-- MediaPipe JS libraries -->
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+  
+  <!-- Core Script -->
+  <script src="main.js"></script>
+</body>
+</html>
